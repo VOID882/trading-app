@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Trading Game</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+}
+
+input,button,select{
+padding:10px;
+margin:5px;
+font-size:16px;
+}
+
+table{
+margin:auto;
+border-collapse:collapse;
+}
+
+td,th{
+border:1px solid white;
+padding:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Trading Game</h1>
+
+<div id="login">
+
+<h2>Register / Login</h2>
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
+<br>
+
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+
+</div>
+
+<div id="game" style="display:none">
+
+<h2>Balance: $<span id="balance">10000</span></h2>
+
+<select id="coin">
+<option value="BTC">Bitcoin</option>
+<option value="ETH">Ethereum</option>
+<option value="SOL">Solana</option>
+</select>
+
+<h3>Price: $<span id="price">0</span></h3>
+
+<input id="amount" type="number" placeholder="Amount">
+
+<br>
+
+<button onclick="buy()">Buy</button>
+<button onclick="sell()">Sell</button>
+<button onclick="saveGame()">Save</button>
+
+<h2>Portfolio</h2>
+
+<table>
+
+<tr>
+<th>Coin</th>
+<th>Amount</th>
+</tr>
+
+<tr>
+<td>BTC</td>
+<td id="btc">0</td>
+</tr>
+
+<tr>
+<td>ETH</td>
+<td id="eth">0</td>
+</tr>
+
+<tr>
+<td>SOL</td>
+<td id="sol">0</td>
+</tr>
+
+</table>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+<script>
+
+let balance=10000
+
+let portfolio={
+BTC:0,
+ETH:0,
+SOL:0
+}
+
+let prices={
+BTC:30000,
+ETH:2000,
+SOL:100
+}
+
+let labels=[]
+let historyPrice=[]
+
+const chart=new Chart(
+document.getElementById("chart"),
+{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Price",
+data:historyPrice
+}]
+}
+}
+)
+
+function register(){
+
+let user=document.getElementById("username").value
+let pass=document.getElementById("password").value
+
+localStorage.setItem("user_"+user,pass)
+
+alert("Account created")
+
+}
+
+function login(){
+
+let user=document.getElementById("username").value
+let pass=document.getElementById("password").value
+
+let saved=localStorage.getItem("user_"+user)
+
+if(saved==pass){
+
+loadGame(user)
+
+}else{
+
+alert("Wrong login")
+
+}
+
+}
+
+function loadGame(user){
+
+document.getElementById("login").style.display="none"
+document.getElementById("game").style.display="block"
+
+let data=localStorage.getItem("save_"+user)
+
+if(data){
+
+let save=JSON.parse(data)
+
+balance=save.balance
+portfolio=save.portfolio
+
+}
+
+updateUI()
+
+}
+
+function saveGame(){
+
+let user=document.getElementById("username").value
+
+let save={
+balance:balance,
+portfolio:portfolio
+}
+
+localStorage.setItem("save_"+user,JSON.stringify(save))
+
+alert("Game saved")
+
+}
+
+function updateUI(){
+
+document.getElementById("balance").innerText=balance.toFixed(2)
+
+document.getElementById("btc").innerText=portfolio.BTC.toFixed(4)
+document.getElementById("eth").innerText=portfolio.ETH.toFixed(4)
+document.getElementById("sol").innerText=portfolio.SOL.toFixed(4)
+
+let coin=document.getElementById("coin").value
+
+document.getElementById("price").innerText=prices[coin].toFixed(2)
+
+}
+
+function buy(){
+
+let coin=document.getElementById("coin").value
+let amount=parseFloat(document.getElementById("amount").value)
+
+if(!amount)return
+
+let cost=prices[coin]*amount
+
+if(balance>=cost){
+
+balance-=cost
+portfolio[coin]+=amount
+
+updateUI()
+
+}
+
+}
+
+function sell(){
+
+let coin=document.getElementById("coin").value
+let amount=parseFloat(document.getElementById("amount").value)
+
+if(!amount)return
+
+if(portfolio[coin]>=amount){
+
+portfolio[coin]-=amount
+balance+=prices[coin]*amount
+
+updateUI()
+
+}
+
+}
+
+function updatePrices(){
+
+for(let coin in prices){
+
+prices[coin]+= (Math.random()-0.5)*prices[coin]*0.02
+
+}
+
+let coin=document.getElementById("coin").value
+
+labels.push("")
+historyPrice.push(prices[coin])
+
+if(labels.length>30){
+
+labels.shift()
+historyPrice.shift()
+
+}
+
+chart.update()
+
+updateUI()
+
+}
+
+setInterval(updatePrices,1000)
+
+updateUI()
+
+</script>
+
+</body>
+</html>
+.green{
+color:#16c784;
+}
+
+.red{
+color:#ea3943;
+}<script src="https://s3.tradingview.com/tv.js"></script>
+
+<div id="chart" style="height:500px;"></div>
+
+<script>
+new TradingView.widget({
+symbol: "BINANCE:BTCUSDT",
+interval: "1",
+container_id: "chart",
+theme: "dark"
+});
+</script>
